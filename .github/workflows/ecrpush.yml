@@ -2,37 +2,98 @@ name: ECR push & EKS deploy
 
 on:
  workflow_dispatch
+inputs:
+    image_tag:
+        description: "Custom image tag (default uses branch + SHA)"
+        required: false
+        type: string
+    ecr_repo:
+        description: "ECR repository name (e.g., my-service)"
+        required: true
+        type: string
+    build_context:
+        description: "Docker build context (default: .)"
+        required: false
+        type: string
+        default: "."
+    dockerfile:
+        description: "Dockerfile path (default: ./Dockerfile)"
+        required: false
+        type: string
+        default: ".pythonflask/Dockerfile"
+
+permissions:
+  id-token: write   # for OIDC to AWS
+  contents: read
+  packages: read
+
+env:
+  AWS_REGION: ap-southeast-2
 
 jobs:
- ecrpush:
-   runs-on: ubuntu-latest
-   steps:
-    - name: Action for GitHub Actions
-      uses: aws-actions/configure-aws-credentials@v5.1.0
-      with:
-        aws-region: ${{secrets.AWS_REGION  }}
-        aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
-        aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+  build-and-push:
+    runs-on: ubuntu-latest
 
-    - name: Amazon ECR "Login" Action for GitHub Actions
-      id: login-ecr
-      uses: aws-actions/amazon-ecr-login@v2
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-    - name: Set image variables
-      id: vars
-      run: |
-        echo "IMAGE_TAG=latest" >> $GITHUB_ENV
-        echo "FULL_IMAGE=${{ steps.login-ecr.outputs.registry}}/${{secrets.ECR_REPOSITORY }}: ${{IMAGE_TAG}}" >> $GITHUB_ENV
+      # Recommended: use OIDC to assume a role in your AWS account (no long-lived secrets)
+      - name: Configure AWS credentials (OIDC)
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}  # e.g., arn:aws:iam::<ACCOUNT_ID>:role/GitHubActionsECRPush
+          aws-region: ${{ env.AWS_REGION }}
 
-    - name: Build Docker image
-      run: |
-        docker build -t $FULL_IMAGE .
-    - name: Push image to Amazon ECR
-      run: |
-        docker push $FULL_IMAGE
+      - name: Login to Amazon ECR
+        id: ecr_login
+        uses: aws-actions/amazon-ecr-login@v2
 
-    - name: Update kubeconfig for EKS
-      run: |
+      - name: Derive tags
+        id: meta
+        run: |
+          # ECR registry from login step
+          echo "REGISTRY=${{ steps.ecr_login.outputs.registry }}" >> $GITHUB_OUTPUT
+
+          # Determine repo and tag
+          REPO="${{ inputs.ecr_repo }}"
+          if [ -z "$REPO" ]; then
+            echo "ECR repository input is required"; exit 1
+          fi
+
+          # Fallback tag: <branch>-<shortsha>
+          SHORT_SHA=$(echo "${GITHUB_SHA}" | cut -c1-12)
+          DEFAULT_TAG="${GITHUB_REF_NAME}-${SHORT_SHA}"
+
+          TAG="${{ inputs.image_tag }}"
+          if [ -z "$TAG" ]; then
+            TAG="$DEFAULT_TAG"
+          fi
+
+          echo "REPO=$REPO" >> $GITHUB_OUTPUT
+          echo "TAG=$TAG" >> $GITHUB_OUTPUT
+          echo "IMAGE=${{ steps.ecr_login.outputs.registry }}/${REPO}:${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build image
+        run: |
+          docker build \
+            -f "${{ inputs.dockerfile }}" \
+            -t "${{ steps.meta.outputs.IMAGE }}" \
+            "${{ inputs.build_context }}"
+
+      - name: Push image to ECR
+        run: |
+          docker push "${{ steps.meta.outputs.IMAGE }}"
+
+      - name: Output pushed image
+        run: |
+          echo "✅ Pushed: ${{ steps.meta.outputs.IMAGE }}"
+
+   - name: Update kubeconfig for EKS
+       run: |
        aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
     - name: Update Kubernetes Deployment Image
       run: |
