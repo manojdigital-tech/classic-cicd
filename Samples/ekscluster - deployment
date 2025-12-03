@@ -1,0 +1,27 @@
+eks cluster 
+
+ my-eks-cluster
+
+ additionally with ecr
+
+ EKS_CLUSTER_NAME
+
+ gh action script
+
+ aws login
+ build image
+ push to ecr
+
+ deploy to eks
+- name: Update kubeconfig for EKS
+  run: |
+    aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+- name: Update Kubernetes Deployment Image
+ run: |
+    sed -i "s|REPLACE_IMAGE|$FULL_IMAGE|g" k8s/deployment.yaml
+
+ - name: Apply Kubernetes Manifests
+   run: |
+    kubectl apply -f k8s/deployment.yaml
+    kubectl apply -f k8s/service.yaml || true
+  
