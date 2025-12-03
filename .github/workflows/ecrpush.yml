@@ -1,4 +1,4 @@
-name: ECR Image build n push
+name: ECR push & EKS deploy
 
 on:
  workflow_dispatch
