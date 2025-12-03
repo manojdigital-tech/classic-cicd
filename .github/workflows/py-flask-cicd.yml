@@ -1,4 +1,4 @@
-name: CI CD - API-Flask Python Appln
+name: DKR push & aks deploy
 
 
 on:
