@@ -1,4 +1,4 @@
-name: DKR push & aks deploy
+name: DHB push & aks deploy
 
 
 on:
