@@ -1,0 +1,9 @@
+name : ec2 insatnce create
+
+on:
+ createinstance
+
+steps:
+-name : "aws login:
+uses:
+with:ss
