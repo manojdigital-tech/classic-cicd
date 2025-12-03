@@ -2,6 +2,7 @@ name: ECR push & EKS deploy
 
 on:
  workflow_dispatch
+ 
 inputs:
     image_tag:
         description: "Custom image tag (default uses branch + SHA)"
@@ -34,7 +35,7 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
 
-    steps:
+steps:
       - name: Checkout
         uses: actions/checkout@v4
 
@@ -90,16 +91,16 @@ jobs:
 
       - name: Output pushed image
         run: |
-          echo "✅ Pushed: ${{ steps.meta.outputs.IMAGE }}"
+            echo "Pushed: ${{ steps.meta.outputs.IMAGE }}"
 
-   - name: Update kubeconfig for EKS
+      - name: Update kubeconfig for EKS
        run: |
-       aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
-    - name: Update Kubernetes Deployment Image
-      run: |
-       sed -i "s|REPLACE_IMAGE|$FULL_IMAGE|g" k8s/deployment.yaml
+        aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+      - name: Update Kubernetes Deployment Image
+        run: |
+            sed -i "s|REPLACE_IMAGE|$FULL_IMAGE|g" k8s/deployment.yaml
 
-    - name: Apply Kubernetes Manifests
-      run: |
-       kubectl apply -f k8s/deployment.yaml
-       kubectl apply -f k8s/eks-service.yaml || true
+      - name: Apply Kubernetes Manifests
+        run: |
+            kubectl apply -f k8s/deployment.yaml
+            kubectl apply -f k8s/eks-service.yaml || true
