@@ -16,6 +16,6 @@ jobs:
     - name: Pull Docker image
       run: sudo docker pull  manojdigitaldocker/classic-cicd:latest
     - name: Delete Old docker container
-      run: echo " nothing to be removed..no old image found in the repo classic-cicd
+      run: echo "Nothing to be removed..no old image found in the repo classic-cicd"
     - name: Run Docker Container
       run: sudo docker run -d -p 8080:8080 --name cicd-pipeline-container manojdigitaldocker/classic-cicd
