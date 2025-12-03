@@ -1,0 +1,29 @@
+trigger:
+  branches:
+    include:
+      - main
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: Build
+    displayName: Build job
+    pool:
+      name: Hackathon2
+    steps:
+    - task: Docker@2
+      displayName: Build and push an image to container registry
+      inputs:
+        command: buildAndPush
+        repository: flask-python-app-azure
+        dockerfile: Dockerfile
+        containerRegistry: dockercontainerregistry
+        
+        
+
+    - task: PublishPipelineArtifact@1
+      displayName: Publish manifests
+      inputs:
+        artifactName: 'manifests'
+        path: stray `- task:` line at the top which seemed out of place.
