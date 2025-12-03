@@ -1,0 +1,29 @@
+name: ECR Image push
+
+
+on:
+ workflow_dispatch
+
+- name: "Configure AWS Credentials" Action for GitHub Actions
+   uses: aws-actions/configure-aws-credentials@v5.1.0
+    with:
+    aws-region: ${{secrets.AWS_REGION  }}
+    aws-access-key-id: ${{secrets.AWS_ACCESS_KEY_ID}}
+    aws-secret-access-key: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+
+- name: Amazon ECR "Login" Action for GitHub Actions
+  id: login-ecr
+  uses: aws-actions/amazon-ecr-login@v2
+
+- name: Set image variables
+  id: vars
+  run: |
+   echo "IMAGE_TAG=latest" >> $GITHUB_ENV
+   echo "FULL_IMAGE=${{ steps.login-ecr.outputs.registry}}/${{secrets.ECR_REPOSITORY }}: ${{IMAGE_TAG}}" >> $GITHUB_ENV
+
+- name: Build Docker image
+  run: |
+   docker build -t $FULL_IMAGE .
+- name: Push image to Amazon ECR
+  run: |
+    docker push $FULL_IMAGE
