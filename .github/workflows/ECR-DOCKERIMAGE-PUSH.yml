@@ -59,7 +59,7 @@ jobs:
       - name: Apply Kubernetes Manifests
         run: |
           kubectl apply -f k8s/deployment.yml
-          kubectl apply -f k8s/eks-service.yml || true
+          kubectl apply -f k8s/aks-service.yml || true
 
       #- name: Build, tag, and push image to Amazon ECR
       #  id: build-image
