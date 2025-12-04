@@ -9,7 +9,7 @@ COPY .env requirements.txt   /api-flask/
 COPY pythonflask/resources/ /api-flask/resources/
 COPY pythonflask/util/ /api-flask/util/
 COPY pythonflask/static/ /api-flask/static/
-COPY pythonflask/util/application.py /api-flask
+COPY pythonflask/util/application.py /api-flask/
 
 # Upgrade pip and install Python dependencies
 RUN pip3 install --upgrade pip && pip install --no-cache-dir -r requirements.txt
