@@ -41,7 +41,7 @@ jobs:
          echo "file - $file1"
          docker build -t $FULL_IMAGE .
       - name: Show Docker image
-        run: echo "image is - "${IMAGE_TAG}"
+        run: echo "image is - ${IMAGE_TAG}"
         
       - name: Push Docker image to Amazon ECR
         run: |
