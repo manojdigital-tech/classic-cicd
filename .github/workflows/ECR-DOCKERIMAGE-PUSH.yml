@@ -45,7 +45,7 @@ jobs:
         
       - name: Push Docker image to Amazon ECR
         run: |
-          docker push $FULL_IMAGE:latest 
+          docker push $FULL_IMAGE
 
       #- name: Build, tag, and push image to Amazon ECR
       #  id: build-image
