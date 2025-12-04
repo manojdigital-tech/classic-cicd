@@ -38,7 +38,7 @@ jobs:
 
       - name: Build Docker image
         run: |
-          docker build -t $FULL_IMAGE .
+          docker build -t $FULL_IMAGE .pythonflask/Dockerfile
       - name: Push Docker image
         run: |
           docker push $FULL_IMAGE
