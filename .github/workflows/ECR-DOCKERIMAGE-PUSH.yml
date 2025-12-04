@@ -1,4 +1,4 @@
-name: ECR-DOCKERIMAGE-PUSH
+name: ECR-DOCKERIMAGEPUSH-EKSDeployment
 
 on:
   workflow_dispatch
@@ -48,6 +48,18 @@ jobs:
       - name: Push Docker image to Amazon ECR
         run: |
           docker push $FULL_IMAGE
+
+      - name: Update kubeconfig for EKS
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
+      - name: Update Kubernetes Deployment Image
+        run: |
+          sed -i "s|REPLACE_IMAGE|$FULL_IMAGE|g" k8s/deployment.yml
+
+      - name: Apply Kubernetes Manifests
+        run: |
+          kubectl apply -f k8s/deployment.yml
+          kubectl apply -f k8s/eks-service.yml || true
 
       #- name: Build, tag, and push image to Amazon ECR
       #  id: build-image
