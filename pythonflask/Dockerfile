@@ -8,7 +8,7 @@ WORKDIR /api-flask
 COPY .env requirements.txt application.py  /api-flask/
 COPY pythonflask/resources/ /api-flask/resources/
 COPY pythonflask/util/ /api-flask/util/
-COPY pythonflask/static/ /api-flask/static/
+COPY pythonflask/static/swagger/ /api-flask/static/swagger/
 
 # Upgrade pip and install Python dependencies
 RUN pip3 install --upgrade pip && pip install --no-cache-dir -r requirements.txt
