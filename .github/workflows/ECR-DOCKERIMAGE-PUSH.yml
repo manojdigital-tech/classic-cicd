@@ -25,6 +25,7 @@ jobs:
       - name: Set image variables
         id: vars
         run: |
+          file: /pythonflask/Dockerfile
           IMAGE_TAG="latest"
           echo "IMAGE_TAG=$IMAGE_TAG" >> $GITHUB_ENV
           FULL_IMAGE="${{ steps.login-ecr.outputs.registry }}/${{secrets.ECR_REPOSITORY }}:$IMAGE_TAG"
@@ -37,7 +38,7 @@ jobs:
   
       - name: Build Docker image
         run: |
-         file: /pythonflask/Dockerfile
+         echo "file - $file1"
          docker build -t $FULL_IMAGE .$file
       - name: Show Docker image
         run: echo "image is - "${IMAGE_TAG}"
