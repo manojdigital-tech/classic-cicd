@@ -35,10 +35,11 @@ jobs:
          echo "FULL_IMAGE = $FULL_IMAGE"
          echo "${IMAGE_TAG}"
   
-
       - name: Build Docker image
         run: |
           docker build -t $FULL_IMAGE .pythonflask/Dockerfile
+          
       - name: Push Docker image
         run: |
-          docker push $FULL_IMAGE
+          echo "sample image to be pushed is $$FULL_IMAGE"
+          docker push $FULL_IMAGE:latest 
