@@ -5,10 +5,10 @@ FROM python:3.8-slim
 WORKDIR /api-flask
 
 # Copy the necessary files and directories into the container
-COPY .env requirements.txt application.py  /api-flask/
+COPY pythonflask/.env pythonflask/requirements.txt pythonflask/application.py /api-flask/
 COPY pythonflask/resources/ /api-flask/resources/
-COPY pythonflask/util/ /api-flask/util/
 COPY pythonflask/static/swagger/ /api-flask/static/swagger/
+COPY pythonflask/util/ /api-flask/util/
 
 # Upgrade pip and install Python dependencies
 RUN pip3 install --upgrade pip && pip install --no-cache-dir -r requirements.txt
