@@ -39,7 +39,8 @@ jobs:
       - name: Build Docker image
         run: |
          echo "file - $file1"
-         docker build -t $FULL_IMAGE .
+         docker build -t $FULL_IMAGE ./pythonflask
+         
       - name: Show Docker image
         run: echo "image is - ${IMAGE_TAG}"
         
