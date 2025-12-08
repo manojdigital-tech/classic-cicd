@@ -1,29 +1,41 @@
-# Docker
-# Build a Docker image
-# https://docs.microsoft.com/azure/devops/pipelines/languages/docker
-
+# azure-pipelines.yml
 trigger:
-- main
-
-resources:
-- repo: self
+  branches:
+    include:
+      - main
 
 variables:
-  tag: '$(Build.BuildId)'
+  imageRepository: manojdigital-tech/myapp        # Docker Hub repo (username/repo)
+  dockerfilePath: Dockerfile                      # Path to Dockerfile
+  tags: |
+    latest
+    $(Build.BuildId)
 
-stages:
-- stage: Build
-  displayName: Build image
-  jobs:
-  - job: Build
-    displayName: Build
-    pool:
-      name: aks
-    steps:
-    - task: Docker@2
-      displayName: Build an image
-      inputs:
-        command: build
-        dockerfile: '$(Build.SourcesDirectory)/Dockerfile'
-        tags: |
-          $(tag)
+pool:
+  name: 'aks'  # Microsoft-hosted agent with Docker pre-installed
+
+steps:
+  - checkout: self
+
+  # Optional: set up BuildKit for faster/more efficient builds
+  - bash: |
+      echo "Enabling BuildKit"
+      echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+    displayName: 'Enable Docker BuildKit'
+    condition: always()
+
+  # Build & push using the Docker@2 task
+  - task: Docker@2
+    displayName: 'Build and Push to Docker Hub'
+    inputs:
+      containerRegistry: 'azuredockerhubconnection'         # <-- Name of your service connection
+      repository: '$(imageRepository)'
+      command: 'buildAndPush'
+      Dockerfile: '$(dockerfilePath)'
+      tags: |
+        $(tags)
+
+  # Optional: show the final image reference
+  - bash: |
+      echo "Pushed: docker.io/$(imageRepository):$(Build.BuildId)"
+    displayName: 'Summary'
