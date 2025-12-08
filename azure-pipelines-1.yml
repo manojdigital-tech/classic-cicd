@@ -1,0 +1,45 @@
+
+name: 'Push-Docker-To-ACR'   # This is the pipeline name shown in ADO UI
+
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  name: 'aks'
+
+variables:
+  acrLoginServer: 'manojdigitalcontainer.azurecr.io'
+  imageName: 'myapp'
+  imageTag: '$(Build.BuildId)'
+
+steps:
+  - checkout: self
+
+  - task: Docker@2
+    displayName: 'Login to ACR'
+    inputs:
+      command: 'login'
+      containerRegistry: 'azureacrconnection'
+
+  - task: Docker@2
+    displayName: 'Build image'
+    inputs:
+      command: 'build'
+      containerRegistry: 'azureacrconnection'
+      repository: '$(imageName)'
+      Dockerfile: '**/Dockerfile'
+      tags: |
+        $(imageTag)
+        latest
+
+  - task: Docker@2
+    displayName: 'Push image to ACR'
+    inputs:
+      command: 'push'
+      containerRegistry: 'azureacrconnection'
+      repository: '$(imageName)'
+      tags: |
+        $(imageTag)
+        latest
