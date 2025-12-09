@@ -3,7 +3,7 @@ name: aks provisioing and acr image deployment
 trigger: none  # run manually
 
 variables:
-  AZURE_REGION: 'centralindia'
+  AZURE_REGION: 'South India'
   RESOURCE_GROUP: 'aks_group'
   AKS_NAME: 'aksd4'
   ACR_NAME: 'manojdigitalcontainer'
