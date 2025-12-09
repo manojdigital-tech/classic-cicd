@@ -18,11 +18,11 @@ steps:
   - checkout: self
 
   # Optional: set up BuildKit for faster/more efficient builds
-  - bash: |
-      echo "Enabling BuildKit"
-      echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
-    displayName: 'Enable Docker BuildKit'
-    condition: always()
+  #- bash: |
+      #echo "Enabling BuildKit"
+      #echo "DOCKER_BUILDKIT=1" >> $GITHUB_ENV
+    #displayName: 'Enable Docker BuildKit'
+    #condition: always()
 
   # Build & push using the Docker@2 task
   - task: Docker@2
