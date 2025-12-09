@@ -7,7 +7,7 @@ trigger:
 - main
 
 pool:
-  name: aksd4agent
+  name: aksd4
 
 steps:
 - script: echo Hello, world!
