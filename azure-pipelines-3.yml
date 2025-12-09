@@ -1,0 +1,124 @@
+name: aks provisioing and acr image deployment
+
+trigger: none  # run manually
+
+variables:
+  AZURE_REGION: 'centralindia'
+  RESOURCE_GROUP: 'aks_group'
+  AKS_NAME: 'aksd4'
+  ACR_NAME: 'manojdigitalcontainer'
+
+  K8S_NAMESPACE: 'prod'
+  APP_NAME: 'myapp'
+  SERVICE_PORT: 80
+  CONTAINER_PORT: 8080
+  REPLICAS: 2
+
+stages:
+- stage: Provision
+  displayName: Provision AKS
+  jobs:
+  - job: AKS
+    pool:
+      name: 'aksd4'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Provision AKS and attach ACR'
+      inputs:
+        azureSubscription: 'azureserveconn'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -e
+          az account show
+            az aks create \
+              -g "$(RESOURCE_GROUP)" -n "$(AKS_NAME)" \
+              --location "$(AZURE_REGION)" \
+              --node-count 2 \
+              --node-vm-size Standard D4s_v3\
+              --enable-managed-identity \
+              --attach-acr "$(ACR_NAME)" \
+              --generate-ssh-keys
+
+- stage: Deploy
+  displayName: Deploy to AKS
+  dependsOn: Provision
+  jobs:
+  - job: K8SDeploy
+    pool:
+      name: 'aksd4'
+    steps:
+    - task: AzureCLI@2
+      displayName: 'Get AKS creds & deploy'
+      inputs:
+        azureSubscription: '<Your-Service-Connection-Name>'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          set -e
+          # Variables passed as pipeline variables or transformed here
+          IMAGE_REPO="$(IMAGE_REPO)"  # Set at queue-time
+          IMAGE_TAG="$(IMAGE_TAG)"    # Optional
+
+          if [ -z "$IMAGE_REPO" ]; then
+            echo "Please provide IMAGE_REPO at queue time."; exit 1
+          fi
+
+          az aks get-credentials -g "$(RESOURCE_GROUP)" -n "$(AKS_NAME)" --overwrite-existing
+
+          if [ -z "$IMAGE_TAG" ]; then
+            IMAGE_TAG=$(az acr repository show-tags \
+              --name "$(ACR_NAME)" \
+              --repository "$IMAGE_REPO" \
+              --orderby time_desc --top 1 -o tsv)
+          fi
+
+          IMAGE="$(ACR_NAME).azurecr.io/${IMAGE_REPO}:${IMAGE_TAG}"
+
+          cat > deployment.yaml <<'EOF'
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: $(APP_NAME)
+            namespace: $(K8S_NAMESPACE)
+            labels:
+              app: $(APP_NAME)
+          spec:
+            replicas: $(REPLICAS)
+            selector:
+              matchLabels:
+                app: $(APP_NAME)
+            template:
+              metadata:
+                labels:
+                  app: $(APP_NAME)
+              spec:
+                containers:
+                - name: $(APP_NAME)
+                  image: IMAGE_PLACEHOLDER
+                  imagePullPolicy: IfNotPresent
+                  ports:
+                  - containerPort: $(CONTAINER_PORT)
+          ---
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: $(APP_NAME)
+            namespace: $(K8S_NAMESPACE)
+          spec:
+            type: LoadBalancer
+            selector:
+              app: $(APP_NAME)
+            ports:
+            - port: $(SERVICE_PORT)
+              targetPort: $(CONTAINER_PORT)
+              protocol: TCP
+              name: http
+          EOF
+
+          sed -i "s|IMAGE_PLACEHOLDER|$IMAGE|g" deployment.yaml
+
+          kubectl get ns "$(K8S_NAMESPACE)" || kubectl create ns "$(K8S_NAMESPACE)"
+          kubectl apply -f deployment.yaml
+          kubectl rollout status deployment/$(APP_NAME) -n $(K8S_NAMESPACE) --timeout=180s
+          kubectl get svc $(APP_NAME) -n $(K8S_NAMESPACE) -o wide
