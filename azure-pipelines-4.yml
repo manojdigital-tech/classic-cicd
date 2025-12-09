@@ -19,7 +19,7 @@ variables:
   imagePullSecret: 'manojdigitalcontainercc8a-auth'
 
   # Agent VM image name
-  vmImageName: 'ubuntu-latest'
+  name: 'aksv4'
 
   # Name of the new namespace being created to deploy the PR changes.
   k8sNamespaceForPR: 'review-app-$(System.PullRequest.PullRequestId)'
