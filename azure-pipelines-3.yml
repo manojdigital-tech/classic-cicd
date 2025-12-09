@@ -35,7 +35,7 @@ stages:
               -g "$(RESOURCE_GROUP)" -n "$(AKS_NAME)" \
               --location "$(AZURE_REGION)" \
               --node-count 2 \
-              --node-vm-size Standard_D4s_v3\
+              --node-vm-size Standard_DS2_v2\
               --enable-managed-identity \
               --attach-acr "$(ACR_NAME)" \
               --generate-ssh-keys
