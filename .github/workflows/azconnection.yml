@@ -1,0 +1,31 @@
+name: AZ connection testing
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Azure Login action
+      uses: azure/login@v2
+      with:
+        creds: ${{ secrets.AZURE_CREDENTIALS }}
+        enable-AzPSSession: true
+    
+    - name: Azure CLI script
+      uses: azure/cli@v2
+      with:
+        azcliversion: latest
+        inlineScript: |
+          az group show --name "ManojRG"
+          az group show --name "ManojRG1"
+          az group delete --name ManojRG --yes --no-wait
+          az group delete --name ManojRG1 --yes --no-wait
+
+    - name: Azure PowerShell action
+      uses: azure/powershell@v2
+      with:
+        azPSVersion: latest
+        inlineScript: |
+          Get-AzResourceGroup -Name "NetworkWatcherRG"
+          Get-AzResourceGroup -Name "aks_group"
+          # You can write your Azure PowerShell inline scripts here.
