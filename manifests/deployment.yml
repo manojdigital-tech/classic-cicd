@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: manojdigitaltechclassiccicd 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: manojdigitaltechclassiccicd
+  template:
+    metadata:
+      labels:
+        app: manojdigitaltechclassiccicd 
+    spec:
+      containers:
+        - name: manojdigitaltechclassiccicd 
+          image: manojdigitalcontainer.azurecr.io/manojdigitaltechclassiccicd
+          ports:
+          - containerPort: 5000
