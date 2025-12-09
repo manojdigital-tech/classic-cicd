@@ -51,7 +51,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Get AKS creds & deploy'
       inputs:
-        azureSubscription: '<Your-Service-Connection-Name>'
+        azureSubscription: 'azureserveconn'
         scriptType: 'bash'
         scriptLocation: 'inlineScript'
         inlineScript: |
