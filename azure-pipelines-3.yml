@@ -34,8 +34,8 @@ stages:
             az aks create \
               -g "$(RESOURCE_GROUP)" -n "$(AKS_NAME)" \
               --location "$(AZURE_REGION)" \
-              --node-count 2 \
-              --node-vm-size Standard_DS2_v2\
+              --node-count 1 \
+              --node-vm-size Standard_D4s_v3\
               --enable-managed-identity \
               --attach-acr "$(ACR_NAME)" \
               --generate-ssh-keys
